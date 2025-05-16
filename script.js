@@ -1,6 +1,7 @@
 // MAIN CODE
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+let cueball = makeBall(160, 250);
 
 let touchStartX = 0;
 let touchStartY = 0;
@@ -20,34 +21,62 @@ let bounciness = 0.65;  // from 0 - 1
 setupTouch();
 animate();
 
+function makeBall(x, y) {
+  const ball = {
+    radius: 10,
+    xPos: x,
+    yPos: y,
+    xVel: 2,
+    yVel: 1,
+    xAcc: 0,
+    yAcc: 0,
+    color: "#ff0000",
+    draw: function() {
+      ctx.beginPath();
+      ctx.arc(this.xPos,this.yPos,this.radius, 0, 2 * Math.PI);
+      ctx.fillStyle = this.color
+      ctx.fill();
+    },
+    update: function() {
+      this.xVel += this.xAcc;
+      this.yVel += this.yAcc;
+      this.xPos += this.xVel;
+      this.yPos += this.yVel;
+      //bounce off walls 
+      if(this.xPos < 0) {
+        this.xPos = 0;
+        this.xVel *= -1;
+      }
+      if(this.xPos > canvas.width) {
+        this.xPos = canvas.width;
+        this.xVel *= -1;
+      }
+      if(this.yPos < 0) {
+        this.yPos = 0;
+        this.yVel *= -1;
+      }
+      if(this.yPos > canvas.height) {
+        this.yPos = canvas.height;
+        this.yVel *= -1;
+      }
+
+    },
+    push: function(dX,dY) {
+      this.xVel = dX / 20;
+      this.yVel = dY / 20;
+    }
+  };
+  return ball;
+}
+
 
 function animate(){
   // draw
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawChar(xPos, yPos);
-  
-  // update
-  xPos += xVel;
-  yPos += yVel;
-  xVel += xAcc;
-  yVel += yAcc;
-  
-  // update collisions
-  if (yPos + size > canvas.height){
-    yVel = -yVel * bounciness;
-    yPos = canvas.height - size;
-  }
-  if (yPos - size < 0){
-    yVel = -yVel;
-  }
-  if (xPos + size > canvas.width){
-    xVel = -xVel;
-  }
-  if (xPos - size < 0){
-    xVel = -xVel;
-  }
-  
-  // repeat
+  cueball.draw();
+  //update
+  cueball.update();
+  //repeat
   window.requestAnimationFrame(animate);
 }
 
@@ -103,6 +132,9 @@ function setupTouch() {
 }
 
 function processTouch() {
+  let deltaX = (touchEndX - touchStartX);
+  let deltaY = (touchEndY - touchStartY);
+  cueball.push(deltaX, deltaY);
   xVel += (touchEndX - touchStartX) / 20;
   yVel += (touchEndY - touchStartY) / 20;
 }
